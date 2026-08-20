@@ -46,7 +46,8 @@ def validate(data: object) -> dict:
         if item.get("kind") == "file":
             files += 1
         elif item.get("kind") == "dir":
-            dirs += 1
+            if path not in ("", "."):
+                dirs += 1
         else:
             die(f"entry has invalid kind: {path}")
     data["counts"] = {**(data.get("counts") or {}), "files": files, "dirs": dirs}

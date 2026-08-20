@@ -90,18 +90,19 @@ Content completeness cannot compensate for a weak shell. The atlas fails when it
 
 Required:
 
-- the bundled `codebase-understanding-atlas/v1` shell
-- charcoal repository/search bar
-- dark overview hero above the browser
-- one visible card per discovered core capability
+- the bundled `codebase-understanding-atlas/v2` shell
+- compact charcoal repository/search bar
+- restrained owner/repository heading with branch and source counts
 - top-directory sidebar plus breadcrumb-driven main browser
 - pale-blue current-folder explanation
-- file detail drawer and module/term glossary modal
+- dense GitHub-style child rows
+- right-side drawer for file detail and capability/module/term explanation
+- one role card per discovered core capability in every file
 - useful content visible at both desktop and mobile widths
 
-Compare the first desktop viewport with `../assets/atlas-demo.png`. Match its overall hierarchy, density, contrast, and information priority while using only the target repository's facts. See `ui-spec.md` for exact requirements.
+Compare the first desktop viewport with the bundled template and `ui-spec.md`. Match their hierarchy, density, contrast, and information priority while using only the target repository's facts. The public demo screenshot illustrates content depth, not the canonical shell.
 
-Reject a title-plus-tree page even if it embeds every tracked file.
+Reject both a bare title-plus-tree page and an oversized dashboard/hero page, even if either embeds every tracked file.
 
 ## Completeness checks
 

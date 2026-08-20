@@ -28,14 +28,14 @@ VAGUE_PATTERNS = (
 )
 
 REQUIRED_SHELL_MARKERS = (
-    'data-atlas-template="codebase-understanding-atlas/v1"',
+    'data-atlas-template="codebase-understanding-atlas/v2"',
     'id="atlas-topbar"',
-    'id="capability-hero"',
+    'id="repository-head"',
     'id="top-directory"',
     'id="content-panel"',
     'id="detail-drawer"',
-    'id="glossary-dialog"',
     'id="search"',
+    'id="search-results"',
 )
 
 
@@ -107,12 +107,17 @@ def main() -> int:
     for marker in REQUIRED_SHELL_MARKERS:
         if marker not in html:
             fail(errors, f"missing mandatory atlas shell marker: {marker}")
-    if "--hero:#" not in html or ".cap-grid{" not in html:
-        fail(errors, "missing mandatory dark capability hero visual tokens")
+    visual_tokens = ("--bg:#f6f8fa", ".repo-head{", ".layout{", ".summary{", ".filebox{", ".row{")
+    for token in visual_tokens:
+        if token not in html:
+            fail(errors, f"missing mandatory GitHub-style visual token: {token}")
+    if 'class="hero"' in html or 'id="capability-hero"' in html:
+        fail(errors, "oversized capability hero is not part of the primary repository-browser shell")
 
     counts = data.get("counts")
     embedded_dirs = {path for path, item in entries.items() if isinstance(item, dict) and item.get("kind") == "dir"}
-    if not isinstance(counts, dict) or counts.get("files") != len(files) or counts.get("dirs") != len(embedded_dirs):
+    counted_dirs = embedded_dirs - {"", "."}
+    if not isinstance(counts, dict) or counts.get("files") != len(files) or counts.get("dirs") != len(counted_dirs):
         fail(errors, "embedded file/directory counts do not match entries")
 
     for path in sorted(embedded_dirs):

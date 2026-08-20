@@ -92,13 +92,13 @@ Do not bypass this command by emitting an improvised HTML page. Read `ui-spec.md
 
 ## HTML behavior contract
 
-- Uses the bundled shell marked `data-atlas-template="codebase-understanding-atlas/v1"`.
+- Uses the bundled shell marked `data-atlas-template="codebase-understanding-atlas/v2"`.
 - Works from `file://` with no network dependency.
 - Does not fetch repository source at runtime.
 - Escapes embedded JSON and rendered text.
 - Breadcrumbs provide path context; no duplicate full-path block is required.
 - File-role cards appear before low-level declarations.
-- Glossary explains both module names and recurring architecture terms.
+- The header explanation control opens a right-side drawer containing core capabilities, module names, and recurring architecture terms.
 - Search includes aliases and plain-language descriptions.
 - Large repositories remain navigable; render only the current directory and bounded search results.
 - Mobile layout remains readable.

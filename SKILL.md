@@ -131,18 +131,17 @@ python3 /path/to/this-skill/scripts/render_atlas.py \
   --output /external/report/repository-browser.html
 ```
 
-Use `templates/atlas-shell.html` unchanged unless the user explicitly asks for a different visual design. Read [references/ui-spec.md](references/ui-spec.md) completely and inspect [assets/atlas-demo.png](assets/atlas-demo.png) before generating data.
+Use `templates/atlas-shell.html` unchanged unless the user explicitly asks for a different visual design. Read [references/ui-spec.md](references/ui-spec.md) completely before generating data. `assets/atlas-demo.png` is a public-repository content example, not the canonical shell specification.
 
 The required visual hierarchy is:
 
-1. dark sticky repository bar with repository name, glossary button, and wide search
-2. dark blue overview hero with title, revision/counts, and 3–5 equal capability cards
+1. compact dark GitHub-style repository bar with repository identity, glossary button, and wide search
+2. restrained repository heading with branch, revision, file count, and directory count
 3. two-column browser with a compact top-directory sidebar and main content
-4. breadcrumbs, blue folder summary, and repository-style child rows
-5. right-side file detail drawer
-6. centered module/terminology glossary dialog
+4. breadcrumbs, pale-blue folder summary, and dense repository-style child rows
+5. one right-side drawer reused for file detail and the capability/module/terminology overview
 
-A plain repository title followed immediately by a file tree is a failure, even if all files are present. The capability hero is the primary onboarding surface and must appear above the browser.
+The repository browser is the primary surface. Do not add a large marketing hero, dashboard tiles, oversized title, or decorative empty space above it. Core capabilities remain prominent inside the glossary/overview drawer and as the first major section of every file detail.
 
 The file detail drawer must contain, when evidence exists:
 
@@ -170,7 +169,7 @@ Run:
 python3 scripts/audit_atlas.py --repo /path/to/repo --html /path/to/repository-browser.html
 ```
 
-Also extract the application JavaScript and run `node --check` when Node.js is available. Open the page at approximately 1024 px desktop width and compare the overall hierarchy with `assets/atlas-demo.png`: top bar, capability hero, sidebar, folder summary, and child rows must all be visible before accepting the result. Then inspect representative files from UI, backend/domain, persistence, runtime, deployment, generated code, tests, and binary assets.
+Also extract the application JavaScript and run `node --check` when Node.js is available. Open the page at approximately 1024 px desktop width and verify the hierarchy required by `references/ui-spec.md`: compact top bar, repository heading, sidebar, folder summary, and dense child rows must all be visible before accepting the result. Then open the overview drawer and inspect representative files from UI, backend/domain, persistence, runtime, deployment, generated code, tests, and binary assets.
 
 Report:
 
