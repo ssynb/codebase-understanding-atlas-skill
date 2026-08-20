@@ -84,6 +84,25 @@ Assign roles at file granularity. Verify common false positives:
 - shared utilities marked direct simply because many modules import them
 - historical or generated files treated as active runtime owners
 
+## Visual and interaction acceptance
+
+Content completeness cannot compensate for a weak shell. The atlas fails when it looks like a plain file tree instead of an onboarding map.
+
+Required:
+
+- the bundled `codebase-understanding-atlas/v1` shell
+- charcoal repository/search bar
+- dark overview hero above the browser
+- one visible card per discovered core capability
+- top-directory sidebar plus breadcrumb-driven main browser
+- pale-blue current-folder explanation
+- file detail drawer and module/term glossary modal
+- useful content visible at both desktop and mobile widths
+
+Compare the first desktop viewport with `../assets/atlas-demo.png`. Match its overall hierarchy, density, contrast, and information priority while using only the target repository's facts. See `ui-spec.md` for exact requirements.
+
+Reject a title-plus-tree page even if it embeds every tracked file.
+
 ## Completeness checks
 
 - Every tracked file has a non-empty description.
@@ -95,3 +114,5 @@ Assign roles at file granularity. Verify common false positives:
 - Generated code points to its source of truth.
 - Binary assets describe their consumer or purpose when evidence exists.
 - No repository-specific assumptions are carried over from a previous atlas.
+- The mandatory renderer and shell markers pass `audit_atlas.py`.
+- The opened page visually matches the reference hierarchy and all required interactions work.

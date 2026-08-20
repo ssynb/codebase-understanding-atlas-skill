@@ -119,22 +119,32 @@ In the file detail drawer, show one card per discovered capability. Classify the
 
 Every card must explain the exact role. Do not mechanically copy the module-level role when the file is narrower. A file used only during setup must not be marked direct in later runtime flows merely because its parent module participates in both.
 
-### 7. Generate the HTML atlas
+### 7. Generate evidence data, then use the mandatory renderer
 
 Default output: a self-contained `repository-browser.html` in a repository-external report directory.
 
-Required interface:
+**Do not improvise a new page design.** The bundled shell is part of this Skill's output contract. First write the evidence model to `atlas-data.json`, then render it with:
 
-- repository-style folder/file browser
-- breadcrumbs and Chinese/plain-language directory aliases
-- search across paths, aliases, descriptions, declarations, capabilities, and glossary terms
-- folder summary
-- file detail drawer
-- module and terminology glossary
-- source revision and file/directory counts
-- responsive layout
+```bash
+python3 /path/to/this-skill/scripts/render_atlas.py \
+  --data /path/to/atlas-data.json \
+  --output /external/report/repository-browser.html
+```
 
-The file detail drawer should contain:
+Use `templates/atlas-shell.html` unchanged unless the user explicitly asks for a different visual design. Read [references/ui-spec.md](references/ui-spec.md) completely and inspect [assets/atlas-demo.png](assets/atlas-demo.png) before generating data.
+
+The required visual hierarchy is:
+
+1. dark sticky repository bar with repository name, glossary button, and wide search
+2. dark blue overview hero with title, revision/counts, and 3–5 equal capability cards
+3. two-column browser with a compact top-directory sidebar and main content
+4. breadcrumbs, blue folder summary, and repository-style child rows
+5. right-side file detail drawer
+6. centered module/terminology glossary dialog
+
+A plain repository title followed immediately by a file tree is a failure, even if all files are present. The capability hero is the primary onboarding surface and must appear above the browser.
+
+The file detail drawer must contain, when evidence exists:
 
 1. functional purpose
 2. file facts (type, size, lines)
@@ -148,7 +158,7 @@ The file detail drawer should contain:
 
 Do not add a separate “full path” section. The path is already visible through breadcrumbs and browser context; capability role is more useful.
 
-Embed data as JSON in the HTML and escape it safely. Keep the page usable from `file://` without a server.
+The renderer safely embeds the JSON and produces a responsive `file://` page. Do not replace it with CDN assets, framework bundles, runtime source fetching, or a hand-written alternate shell.
 
 ### 8. Validate before reporting completion
 
@@ -160,7 +170,7 @@ Run:
 python3 scripts/audit_atlas.py --repo /path/to/repo --html /path/to/repository-browser.html
 ```
 
-Also extract the application JavaScript and run `node --check` when Node.js is available. Open the page and inspect representative files from UI, backend/domain, persistence, runtime, deployment, generated code, tests, and binary assets.
+Also extract the application JavaScript and run `node --check` when Node.js is available. Open the page at approximately 1024 px desktop width and compare the overall hierarchy with `assets/atlas-demo.png`: top bar, capability hero, sidebar, folder summary, and child rows must all be visible before accepting the result. Then inspect representative files from UI, backend/domain, persistence, runtime, deployment, generated code, tests, and binary assets.
 
 Report:
 

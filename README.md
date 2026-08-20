@@ -49,8 +49,9 @@
 - 说明跨模块依赖提供了什么能力、当前文件为什么需要它；
 - 展示路由、存储结构、主要声明、测试和有价值的源码注释；
 - 为每个文件生成核心能力角色卡片：直接参与、公共支撑、自动化验证、文档说明或不参与；
+- 使用仓库内置的统一页面模板，强制保持截图所示的导航栏、能力总览、双栏目录、详情抽屉与术语弹窗；
 - 生成单文件、自包含、无需服务器的交互式 HTML；
-- 使用审计脚本检查文件覆盖、空泛描述和角色卡片完整性。
+- 使用审计脚本同时检查文件覆盖、空泛描述、角色卡片和页面骨架，避免不同 Agent 各画各的。
 
 ## 这不是“给文件名加一句废话”
 
@@ -121,6 +122,14 @@ Pi 用户安装后执行：
 8. 仓库版本、文件数量和生成基线；
 9. 自动质量审计结果。
 
+Agent 会先生成证据数据，再调用统一渲染器：
+
+```bash
+python3 scripts/render_atlas.py \
+  --data /path/to/atlas-data.json \
+  --output /path/to/repository-browser.html
+```
+
 最终 HTML 可以直接双击打开：
 
 ```text
@@ -152,11 +161,15 @@ python3 scripts/audit_atlas.py \
 ├── SKILL.md                         # Agent 执行流程
 ├── assets/
 │   └── atlas-demo.png              # 真实生成效果图
+├── templates/
+│   └── atlas-shell.html            # 强制统一的交互页面骨架
 ├── references/
-│   ├── output-contract.md          # HTML 输出合同
-│   └── quality-standard.md         # 内容质量标准
+│   ├── output-contract.md          # 数据与渲染合同
+│   ├── quality-standard.md         # 内容质量标准
+│   └── ui-spec.md                  # 视觉层级与交互验收标准
 └── scripts/
-    └── audit_atlas.py              # 自动质量审计
+    ├── render_atlas.py             # 把证据 JSON 渲染为统一 HTML
+    └── audit_atlas.py              # 内容与页面骨架自动审计
 ```
 
 ## 设计原则

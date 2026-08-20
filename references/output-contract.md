@@ -1,16 +1,28 @@
-# Output Data Contract
+# Output Data and Rendering Contract
 
-The HTML implementation may vary, but the embedded JSON should expose equivalent information.
+The evidence varies by repository. The HTML shell does not: render this data with `scripts/render_atlas.py` and the bundled `templates/atlas-shell.html`. Alternate shells fail the default Skill contract unless the user explicitly requests a redesign.
 
 ```json
 {
-  "revision": "source revision",
+  "repository": {
+    "name": "short repository name",
+    "fullName": "owner/repository when known",
+    "title": "reader-facing project title",
+    "branch": "source branch",
+    "architecture": "optional short architecture phrase"
+  },
+  "revision": "full source revision",
+  "counts": {
+    "files": 123,
+    "dirs": 45
+  },
   "capabilities": [
     {
       "id": "stable-id",
       "name": "plain-language name",
       "trigger": "user action",
-      "outcome": "observable successful result"
+      "outcome": "observable successful result",
+      "summary": "one or two concise sentences shown in the hero card"
     }
   ],
   "modules": {
@@ -21,6 +33,12 @@ The HTML implementation may vary, but the embedded JSON should expose equivalent
       "doesNotOwn": "important boundary"
     }
   },
+  "glossary": [
+    {
+      "code": "recurring technical term",
+      "meaning": "meaning in this repository"
+    }
+  ],
   "entries": {
     "relative/path": {
       "kind": "file or dir",
@@ -62,8 +80,19 @@ The HTML implementation may vary, but the embedded JSON should expose equivalent
 }
 ```
 
+## Rendering command
+
+```bash
+python3 scripts/render_atlas.py \
+  --data /path/to/atlas-data.json \
+  --output /path/to/repository-browser.html
+```
+
+Do not bypass this command by emitting an improvised HTML page. Read `ui-spec.md` for the mandatory first-screen hierarchy and visual acceptance process.
+
 ## HTML behavior contract
 
+- Uses the bundled shell marked `data-atlas-template="codebase-understanding-atlas/v1"`.
 - Works from `file://` with no network dependency.
 - Does not fetch repository source at runtime.
 - Escapes embedded JSON and rendered text.

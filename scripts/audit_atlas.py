@@ -18,10 +18,24 @@ VAGUE_PATTERNS = (
     "implements the responsibility corresponding to",
     "automation for",
     "handles the corresponding domain responsibility",
+    "provides utilities for",
     "对应的领域职责",
     "对应的自动化",
     "实现“",
     "仓库支持文件，用于",
+    "提供所属包需要的局部实现",
+    "完成“所属模块”流程中的内部步骤",
+)
+
+REQUIRED_SHELL_MARKERS = (
+    'data-atlas-template="codebase-understanding-atlas/v1"',
+    'id="atlas-topbar"',
+    'id="capability-hero"',
+    'id="top-directory"',
+    'id="content-panel"',
+    'id="detail-drawer"',
+    'id="glossary-dialog"',
+    'id="search"',
 )
 
 
@@ -78,8 +92,33 @@ def main() -> int:
         fail(errors, f"{len(extra)} embedded files are not tracked; first: {extra[:5]}")
 
     capabilities = data.get("capabilities")
-    if capabilities is not None and not 1 <= len(capabilities) <= 5:
+    if not isinstance(capabilities, list) or not 1 <= len(capabilities) <= 5:
         fail(errors, "capability count must be between 1 and 5")
+        capabilities = []
+    else:
+        for capability in capabilities:
+            if not isinstance(capability, dict) or not all(
+                isinstance(capability.get(key), str) and capability[key].strip()
+                for key in ("id", "name", "trigger", "outcome")
+            ):
+                fail(errors, "every capability requires id, name, trigger, and outcome")
+                break
+
+    for marker in REQUIRED_SHELL_MARKERS:
+        if marker not in html:
+            fail(errors, f"missing mandatory atlas shell marker: {marker}")
+    if "--hero:#" not in html or ".cap-grid{" not in html:
+        fail(errors, "missing mandatory dark capability hero visual tokens")
+
+    counts = data.get("counts")
+    embedded_dirs = {path for path, item in entries.items() if isinstance(item, dict) and item.get("kind") == "dir"}
+    if not isinstance(counts, dict) or counts.get("files") != len(files) or counts.get("dirs") != len(embedded_dirs):
+        fail(errors, "embedded file/directory counts do not match entries")
+
+    for path in sorted(embedded_dirs):
+        description = entries[path].get("description")
+        if not isinstance(description, str) or not description.strip():
+            fail(errors, f"empty directory description: {path or '/'}")
 
     role_counts: set[int] = set()
     for path in sorted(files):
@@ -98,9 +137,20 @@ def main() -> int:
             fail(errors, f"missing core capability roles: {path}")
         else:
             role_counts.add(len(roles))
+            if capabilities and len(roles) != len(capabilities):
+                fail(errors, f"capability-card count does not match discovered capabilities: {path}")
             for role in roles:
                 if not all(isinstance(role.get(key), str) and role[key].strip() for key in ("name", "relation", "description")):
                     fail(errors, f"incomplete core role: {path}")
+                    break
+
+        dependencies = item.get("dependencies", [])
+        if not isinstance(dependencies, list):
+            fail(errors, f"dependencies is not a list: {path}")
+        else:
+            for dependency in dependencies:
+                if not isinstance(dependency, dict) or not dependency.get("name") or not dependency.get("purpose"):
+                    fail(errors, f"dependency without purpose explanation: {path}")
                     break
 
         details = item.get("symbolDetails", [])
@@ -116,6 +166,17 @@ def main() -> int:
         fail(errors, f"files have inconsistent capability-card counts: {sorted(role_counts)}")
     if role_counts and not 1 <= next(iter(role_counts)) <= 5:
         fail(errors, "each file must have 1–5 capability cards")
+
+    modules = data.get("modules", {})
+    if not isinstance(modules, dict):
+        fail(errors, "modules is not an object")
+    else:
+        for code_name, module in modules.items():
+            if not isinstance(module, dict) or not all(
+                isinstance(module.get(key), str) and module[key].strip()
+                for key in ("name", "owns", "usedFor", "doesNotOwn")
+            ):
+                fail(errors, f"incomplete module glossary entry: {code_name}")
 
     if re.search(r">\s*(?:Full path|完整路径)\s*<", html, re.IGNORECASE):
         fail(errors, "a redundant full-path section is present")
