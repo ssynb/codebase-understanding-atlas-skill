@@ -1,40 +1,74 @@
-# Codebase Understanding Atlas Skill
+# 代码库理解地图 Skill
 
-An [Agent Skills](https://agentskills.io/) compatible workflow for turning an unfamiliar software repository into an evidence-based, interactive HTML atlas.
+> **你还在为看不懂 GitHub 上的开源项目而烦恼吗？**
+>
+> README 看完感觉自己会了，点进 `src/` 大脑立刻 `404 Not Found`？
+>
+> 文件树翻了半小时，只得到一个结论：**这些文件确实都是文件。**
 
-It helps coding agents explain a system from user-visible capabilities down to modules, files, declarations, dependencies, routes, storage, and tests—without reducing descriptions to paraphrased filenames or unexplained technical names.
+别急着关掉仓库。
 
-[中文说明](#中文说明) · [English](#english)
+**代码库理解地图**可以让 Agent 先读源码、查调用、找路由、看数据表、追测试，再把陌生项目做成一张可搜索、可钻取、能离线打开的交互式 HTML 地图。
 
-## 中文说明
+它不只告诉你“这里有个 `agent-loop`”，还会继续解释：
 
-### 解决什么问题
+- 它用大白话是什么意思；
+- 它负责哪段用户流程；
+- 哪些文件真的执行了这个功能；
+- 它为什么依赖另一个模块；
+- 出问题时应该先看路由、存储、实现，还是测试。
 
-面对陌生代码库时，普通文件树通常只能告诉你“文件叫什么”，不能告诉你：
+一句话总结：**把“这仓库到底在干吗”从一道玄学题，变成一张可以点开的地图。**
 
-- 项目最重要的用户功能是什么
-- 一个文件在完整用户流程中位于哪一步
-- 为什么要依赖另一个模块
-- 英文模块名、函数名和数据表分别代表什么
-- 哪些文件是生产执行、公共支撑、自动化验证或文档说明
+## 先看效果，拒绝只画饼
 
-这个 Skill 指导 Agent 基于源码证据生成一个可离线打开的 HTML 代码库地图。
+下面是对一个拥有 **7807 个 tracked files、1253 个目录、226 个插件包**的大型开源仓库生成的真实效果：
 
-### 核心能力
+[![代码库理解地图真实生成效果](assets/atlas-demo.png)](assets/atlas-demo.png)
 
-- 自动识别项目最重要的 3–5 个用户可见功能
-- 覆盖 Git 中全部 tracked files
-- 为模块、目录和文件生成通俗职责说明
-- 把技术标识显示为“代码名（通俗含义）”
-- 解释依赖另一个模块的具体目的
-- 展示路由、数据表、主要声明、测试和源码注释
-- 从每个核心功能视角说明文件是直接参与、公共支撑、验证、说明或不参与
-- 生成无需服务器即可通过 `file://` 打开的交互式 HTML
-- 附带自动审计脚本，检查覆盖率、空泛描述和功能卡片完整性
+> 点击图片可以查看大图。实际产物是完整交互式 HTML：可以搜索文件和功能、进入目录、查看模块说明，并从核心能力视角检查每个文件的角色。
 
-### 安装
+## 它能治哪些“代码阅读疑难杂症”
 
-安装到跨 Agent 通用的全局 Skill 目录：
+普通文件树通常只能告诉你文件叫什么，本 Skill 继续回答这些更要命的问题：
+
+- 项目最重要的 3–5 个用户功能是什么？
+- 一次真实请求从入口到存储到底经过了谁？
+- 一个文件是生产执行、公共支撑、自动化验证，还是只负责说明？
+- `Gateway`、`Projection`、`Provider` 这些词放在当前项目里到底是什么意思？
+- 这个模块为什么依赖另一个模块，而不是简单地说“它调用了它”？
+- 路由、数据表、公开声明和测试分别保护了什么行为？
+- 仓库里是不是还有一份被遗忘的第二实现，正等着半夜给你惊喜？
+
+## 核心能力
+
+- 从产品文档、入口、实现和测试中识别核心用户能力；
+- 覆盖 Git 中全部 tracked files，不把角落里的脚本当空气；
+- 为模块、目录和文件生成通俗中文职责说明；
+- 用“代码名（通俗含义）”解释技术标识；
+- 说明跨模块依赖提供了什么能力、当前文件为什么需要它；
+- 展示路由、存储结构、主要声明、测试和有价值的源码注释；
+- 为每个文件生成核心能力角色卡片：直接参与、公共支撑、自动化验证、文档说明或不参与；
+- 生成单文件、自包含、无需服务器的交互式 HTML；
+- 使用审计脚本检查文件覆盖、空泛描述和角色卡片完整性。
+
+## 这不是“给文件名加一句废话”
+
+地图中的结论必须来自可检查的证据，例如：
+
+- 产品文档和用户指南；
+- CLI、Web、API 和 Worker 入口；
+- 调用方与被调用方；
+- 类型、函数、路由和数据库结构；
+- 模块清单和依赖声明；
+- 单元测试、集成测试和端到端测试；
+- 源码中的设计注释。
+
+证据不足时应明确保留不确定性，而不是把 `mystery-manager.ts` 翻译成“神秘管理器负责管理神秘事务”后宣布分析完成。
+
+## 安装
+
+安装到兼容 Agent Skills 标准的全局 Skill 目录：
 
 ```bash
 git clone https://github.com/ssynb/codebase-understanding-atlas-skill.git \
@@ -48,19 +82,54 @@ Pi 用户安装后执行：
 /skill:codebase-understanding-atlas
 ```
 
-其他兼容 Agent Skills 标准的工具会从其支持的 Skill 目录发现 `SKILL.md`。
+其他支持 [Agent Skills](https://agentskills.io/) 的工具，可以从其支持的 Skill 目录发现 `SKILL.md`。
 
-### 使用示例
+## 怎么用
+
+最简单的说法：
 
 ```text
 使用 codebase-understanding-atlas 分析当前代码库，生成一个面向新成员的交互式 HTML 项目地图。
 ```
 
+想严格一点，可以这样说：
+
 ```text
-重新生成代码库地图，重点检查每个依赖是否解释了调用目的，并确认所有 tracked files 都被覆盖。
+使用 codebase-understanding-atlas 严格分析当前仓库。先识别核心用户能力，
+再覆盖全部 tracked files，解释模块、依赖、路由、存储和测试，
+最后生成可通过 file:// 离线打开的交互式 HTML，并运行完整审计。
 ```
 
-### 校验生成结果
+也可以用于更新已有地图：
+
+```text
+重新生成代码库地图，重点检查每个依赖是否解释了调用目的，
+并确认所有 tracked files 都被覆盖。
+```
+
+## 生成结果包含什么
+
+一份合格的地图通常包含：
+
+1. 项目整体定位和核心能力；
+2. 从入口到结果的主要用户流程；
+3. 模块与目录职责；
+4. 全部 tracked files 的可搜索浏览器；
+5. 文件的声明、依赖、路由、存储和测试证据；
+6. 每个文件在各核心能力中的具体角色；
+7. 面向陌生读者的中英文术语解释；
+8. 仓库版本、文件数量和生成基线；
+9. 自动质量审计结果。
+
+最终 HTML 可以直接双击打开：
+
+```text
+file:///path/to/repository-browser.html
+```
+
+不需要启动后端，不需要先 `npm install`，也不用献祭一个端口号。
+
+## 校验生成结果
 
 ```bash
 python3 scripts/audit_atlas.py \
@@ -68,71 +137,44 @@ python3 scripts/audit_atlas.py \
   --html /path/to/repository-browser.html
 ```
 
-## English
+审计脚本会检查：
 
-### What it solves
+- 是否覆盖全部 tracked files；
+- 是否有重复或遗漏文件；
+- 每个文件是否具备完整的核心能力角色卡片；
+- 是否出现空描述或典型空泛措辞；
+- HTML 是否包含离线运行所需的内嵌数据。
 
-A normal file tree tells readers what files are named, but rarely explains:
-
-- the repository's most important user-visible capabilities
-- where a file participates in an end-to-end flow
-- why it depends on another module
-- what technical module, declaration, and storage names mean
-- whether a file executes production behavior, supports it, verifies it, or only documents it
-
-This skill guides an agent through source-grounded investigation and generation of a standalone interactive HTML atlas.
-
-### Highlights
-
-- Discovers 3–5 core user-visible capabilities from repository evidence
-- Covers every Git-tracked file
-- Produces plain-language module, directory, and file responsibilities
-- Explains displayed technical identifiers instead of listing bare names
-- Explains the purpose of cross-module dependencies
-- Surfaces routes, storage facts, declarations, tests, and useful source comments
-- Maps every file to each core capability as Direct, Support, Verification, Documentation, or Not involved
-- Generates a self-contained `file://`-compatible HTML browser
-- Includes an audit script for coverage and description quality
-
-### Installation
-
-```bash
-git clone https://github.com/ssynb/codebase-understanding-atlas-skill.git \
-  ~/.agents/skills/codebase-understanding-atlas
-```
-
-For Pi:
-
-```text
-/reload
-/skill:codebase-understanding-atlas
-```
-
-### Repository contents
+## 仓库结构
 
 ```text
 .
-├── SKILL.md
+├── SKILL.md                         # Agent 执行流程
+├── assets/
+│   └── atlas-demo.png              # 真实生成效果图
 ├── references/
-│   ├── output-contract.md
-│   └── quality-standard.md
+│   ├── output-contract.md          # HTML 输出合同
+│   └── quality-standard.md         # 内容质量标准
 └── scripts/
-    └── audit_atlas.py
+    └── audit_atlas.py              # 自动质量审计
 ```
 
-## Design principles
+## 设计原则
 
-- Evidence before inference
-- User flows before infrastructure lists
-- Plain language before unexplained identifiers
-- File-level roles instead of blindly copied module-level roles
-- Explicit uncertainty instead of fabricated explanations
-- Systemic generator fixes instead of one-off wording patches
+- 先证据，后推断；
+- 先用户流程，后基础设施清单；
+- 先说人话，后摆技术名词；
+- 文件级角色不能无脑继承模块级标签；
+- 不确定就明确说不确定，不靠编故事提高“完整度”；
+- 优先修复生成规则，不靠手工给几百个文件逐个打补丁；
+- 地图是阅读入口，不是假装可以替代源码的魔法水晶球。
 
-## Security
+## 安全说明
 
-Skills can instruct agents to read files and execute commands. Review `SKILL.md` and helper scripts before use, and run agents with permissions appropriate for the repository being analyzed.
+Skill 会指导 Agent 读取文件和执行命令。使用前请检查 `SKILL.md` 与辅助脚本，并根据目标仓库设置合适的权限。
 
-## License
+建议不要对来源不明的仓库直接开放无限制执行权限——理解代码库很重要，保住电脑里的其他文件也同样重要。
 
-MIT
+## 开源协议
+
+采用 [MIT License](LICENSE)。可以自由使用、修改和分发；如果它帮你少迷路了两个小时，欢迎点个 Star，让下一个迷路的人更容易找到它。
