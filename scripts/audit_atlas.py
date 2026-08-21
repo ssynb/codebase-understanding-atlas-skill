@@ -27,8 +27,25 @@ VAGUE_PATTERNS = (
     "完成“所属模块”流程中的内部步骤",
 )
 
+HAN_RE = re.compile(r"[\u3400-\u9fff]")
+ENGLISH_WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z-]{2,}\b")
+VALID_SYMBOL_KINDS = {"函数", "方法", "类型", "接口", "类", "变量", "常量", "声明"}
+VALID_RELATIONS = {"直接参与", "支撑", "验证", "说明", "不直接参与"}
+VALID_TABLE_ACCESS = {"读取", "写入", "读写", "定义", "迁移"}
+
+REQUIRED_DRAWER_LABELS = (
+    "这个文件主要做什么",
+    "个主要功能中的作用",
+    "主要函数、类型和变量",
+    "直接涉及的数据表",
+    "注册的 HTTP 路由",
+    "为什么要使用其他模块",
+    "源码设计说明",
+    "主要测试场景",
+)
+
 REQUIRED_SHELL_MARKERS = (
-    'data-atlas-template="codebase-understanding-atlas/v2"',
+    'data-atlas-template="codebase-understanding-atlas/v3"',
     'id="atlas-topbar"',
     'id="repository-head"',
     'id="top-directory"',
@@ -41,6 +58,14 @@ REQUIRED_SHELL_MARKERS = (
 
 def fail(errors: list[str], message: str) -> None:
     errors.append(message)
+
+
+def chinese_explanation(value: object, *, min_han: int = 6, max_chars: int = 300) -> bool:
+    if not isinstance(value, str) or not value.strip() or len(value) > max_chars:
+        return False
+    han = len(HAN_RE.findall(value))
+    english_words = len(ENGLISH_WORD_RE.findall(value))
+    return han >= min_han and english_words <= max(4, han // 2)
 
 
 def tracked_files(repo: Path) -> set[str]:
@@ -97,16 +122,21 @@ def main() -> int:
         capabilities = []
     else:
         for capability in capabilities:
-            if not isinstance(capability, dict) or not all(
-                isinstance(capability.get(key), str) and capability[key].strip()
-                for key in ("id", "name", "trigger", "outcome")
+            if not (
+                isinstance(capability, dict)
+                and isinstance(capability.get("id"), str)
+                and capability["id"].strip()
+                and all(chinese_explanation(capability.get(key), min_han=3, max_chars=240) for key in ("name", "trigger", "outcome"))
             ):
-                fail(errors, "every capability requires id, name, trigger, and outcome")
+                fail(errors, "every capability requires a Chinese name, trigger, and outcome")
                 break
 
     for marker in REQUIRED_SHELL_MARKERS:
         if marker not in html:
             fail(errors, f"missing mandatory atlas shell marker: {marker}")
+    for label in REQUIRED_DRAWER_LABELS:
+        if label not in html:
+            fail(errors, f"missing mandatory Chinese drawer section: {label}")
     visual_tokens = ("--bg:#f6f8fa", ".repo-head{", ".layout{", ".summary{", ".filebox{", ".row{")
     for token in visual_tokens:
         if token not in html:
@@ -122,20 +152,27 @@ def main() -> int:
 
     for path in sorted(embedded_dirs):
         description = entries[path].get("description")
-        if not isinstance(description, str) or not description.strip():
-            fail(errors, f"empty directory description: {path or '/'}")
+        if not chinese_explanation(description, min_han=4, max_chars=360):
+            fail(errors, f"directory description is empty, English-heavy, or not concise Chinese: {path or '/'}")
 
     role_counts: set[int] = set()
     for path in sorted(files):
         item = entries[path]
         description = item.get("description")
-        if not isinstance(description, str) or not description.strip():
-            fail(errors, f"empty file description: {path}")
+        if not chinese_explanation(description, min_han=8, max_chars=420):
+            fail(errors, f"file description is empty, English-heavy, or not concise Chinese: {path}")
             continue
         lowered = description.lower()
         for phrase in VAGUE_PATTERNS:
             if phrase.lower() in lowered:
                 fail(errors, f"vague description phrase {phrase!r}: {path}")
+
+        purpose = item.get("purpose")
+        if not isinstance(purpose, dict) or not all(
+            chinese_explanation(purpose.get(key), min_han=6, max_chars=240)
+            for key in ("summary", "when", "effect")
+        ):
+            fail(errors, f"missing or non-Chinese structured purpose: {path}")
 
         roles = item.get("coreRoles")
         if not isinstance(roles, list) or not roles:
@@ -145,8 +182,14 @@ def main() -> int:
             if capabilities and len(roles) != len(capabilities):
                 fail(errors, f"capability-card count does not match discovered capabilities: {path}")
             for role in roles:
-                if not all(isinstance(role.get(key), str) and role[key].strip() for key in ("name", "relation", "description")):
-                    fail(errors, f"incomplete core role: {path}")
+                if not (
+                    isinstance(role, dict)
+                    and isinstance(role.get("name"), str)
+                    and role["name"].strip()
+                    and role.get("relation") in VALID_RELATIONS
+                    and chinese_explanation(role.get("description"), min_han=5, max_chars=280)
+                ):
+                    fail(errors, f"incomplete, English-heavy, or invalid core role: {path}")
                     break
 
         dependencies = item.get("dependencies", [])
@@ -154,23 +197,100 @@ def main() -> int:
             fail(errors, f"dependencies is not a list: {path}")
         else:
             for dependency in dependencies:
-                if not isinstance(dependency, dict) or not dependency.get("name") or not dependency.get("purpose"):
-                    fail(errors, f"dependency without purpose explanation: {path}")
+                if not (
+                    isinstance(dependency, dict)
+                    and dependency.get("name")
+                    and chinese_explanation(dependency.get("purpose"), min_han=5, max_chars=240)
+                ):
+                    fail(errors, f"dependency without concise Chinese purpose explanation: {path}")
                     break
 
         details = item.get("symbolDetails", [])
         if not isinstance(details, list):
             fail(errors, f"symbolDetails is not a list: {path}")
         else:
+            if item.get("symbols") and not details:
+                fail(errors, f"declarations were detected but no main function/type/variable was explained: {path}")
             for detail in details:
-                if not isinstance(detail, dict) or not detail.get("name") or not detail.get("description"):
-                    fail(errors, f"unexplained displayed declaration: {path}")
+                if not (
+                    isinstance(detail, dict)
+                    and detail.get("name")
+                    and detail.get("kind") in VALID_SYMBOL_KINDS
+                    and chinese_explanation(detail.get("description"), min_han=4, max_chars=240)
+                ):
+                    fail(errors, f"displayed declaration lacks kind or concise Chinese explanation: {path}")
                     break
+
+        tables = item.get("tables")
+        if not isinstance(tables, list):
+            fail(errors, f"tables is not a list: {path}")
+        else:
+            for table in tables:
+                if not (
+                    isinstance(table, dict)
+                    and table.get("name")
+                    and chinese_explanation(table.get("display"), min_han=2, max_chars=80)
+                    and table.get("access") in VALID_TABLE_ACCESS
+                    and chinese_explanation(table.get("purpose"), min_han=4, max_chars=200)
+                ):
+                    fail(errors, f"table lacks Chinese fact name, access mode, or purpose: {path}")
+                    break
+
+        routes = item.get("routes")
+        if not isinstance(routes, list):
+            fail(errors, f"routes is not a list: {path}")
+        else:
+            for route in routes:
+                if not (
+                    isinstance(route, dict)
+                    and route.get("method")
+                    and route.get("path")
+                    and chinese_explanation(route.get("description"), min_han=4, max_chars=200)
+                ):
+                    fail(errors, f"route lacks a concise Chinese explanation: {path}")
+                    break
+
+        tests = item.get("tests")
+        if not isinstance(tests, list):
+            fail(errors, f"tests is not a list: {path}")
+        else:
+            for test in tests:
+                if not (
+                    isinstance(test, dict)
+                    and test.get("name")
+                    and chinese_explanation(test.get("description"), min_han=4, max_chars=240)
+                ):
+                    fail(errors, f"test lacks a concise Chinese behavior explanation: {path}")
+                    break
+
+        design_notes = item.get("designNotes")
+        if not isinstance(design_notes, list):
+            fail(errors, f"designNotes is not a list: {path}")
+        else:
+            for note in design_notes:
+                if not chinese_explanation(note, min_han=5, max_chars=280):
+                    fail(errors, f"source design note is English-heavy or not concise Chinese: {path}")
+                    break
+        if item.get("sourceComment") and not design_notes:
+            fail(errors, f"source comment exists but has no Chinese designNotes translation: {path}")
 
     if len(role_counts) > 1:
         fail(errors, f"files have inconsistent capability-card counts: {sorted(role_counts)}")
     if role_counts and not 1 <= next(iter(role_counts)) <= 5:
         fail(errors, "each file must have 1–5 capability cards")
+
+    glossary = data.get("glossary", [])
+    if not isinstance(glossary, list):
+        fail(errors, "glossary is not a list")
+    else:
+        for term in glossary:
+            if not (
+                isinstance(term, dict)
+                and (term.get("code") or term.get("name"))
+                and chinese_explanation(term.get("meaning") or term.get("description"), min_han=3, max_chars=240)
+            ):
+                fail(errors, "glossary term lacks a concise Chinese explanation")
+                break
 
     modules = data.get("modules", {})
     if not isinstance(modules, dict):
@@ -178,10 +298,10 @@ def main() -> int:
     else:
         for code_name, module in modules.items():
             if not isinstance(module, dict) or not all(
-                isinstance(module.get(key), str) and module[key].strip()
+                chinese_explanation(module.get(key), min_han=3, max_chars=500)
                 for key in ("name", "owns", "usedFor", "doesNotOwn")
             ):
-                fail(errors, f"incomplete module glossary entry: {code_name}")
+                fail(errors, f"incomplete or English-heavy module glossary entry: {code_name}")
 
     if re.search(r">\s*(?:Full path|完整路径)\s*<", html, re.IGNORECASE):
         fail(errors, "a redundant full-path section is present")

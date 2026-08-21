@@ -45,6 +45,15 @@ def validate(data: object) -> dict:
         item.setdefault("path", path)
         if item.get("kind") == "file":
             files += 1
+            purpose = item.get("purpose")
+            if not isinstance(purpose, dict) or not all(
+                isinstance(purpose.get(key), str) and purpose[key].strip()
+                for key in ("summary", "when", "effect")
+            ):
+                die(f"file requires purpose.summary, purpose.when, and purpose.effect: {path}")
+            for field in ("coreRoles", "symbolDetails", "tables", "routes", "dependencies", "designNotes", "tests"):
+                if not isinstance(item.get(field), list):
+                    die(f"file requires a {field} list: {path}")
         elif item.get("kind") == "dir":
             if path not in ("", "."):
                 dirs += 1

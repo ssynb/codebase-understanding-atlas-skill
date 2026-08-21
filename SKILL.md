@@ -21,7 +21,9 @@ This is an investigation workflow, not a filename paraphraser. Every claim must 
 7. Explain dependencies as purpose: “uses X to obtain Y or enforce Z,” not merely “calls X.”
 8. Prefer source comments, signatures, call sites, routes, SQL, schemas, contracts, and tests over inference.
 9. Do not invent descriptions for opaque private helpers. Omit low-confidence helpers from the “main declarations” list and state that they were omitted rather than guessing.
-10. Describe files in the user's language. Preserve code identifiers only where they help the reader find source.
+10. Describe files in the user's language. For Chinese users, all explanations must be Chinese; preserve English only for searchable source identifiers, paths, protocol names, and unavoidable technical keywords.
+11. Never expose a raw English README paragraph or source comment as the explanation. Translate its meaning into concise Chinese and keep the original identifier only where it helps locate source.
+12. The bundled data schema and drawer sections are mandatory. Do not rename, omit, merge, or reorder them merely because an agent generated less evidence.
 
 ## Workflow
 
@@ -86,16 +88,29 @@ For every tracked file, gather applicable evidence:
 
 Read binary assets by metadata and usage references; do not pretend to parse them as source.
 
-### 5. Write plain-language file descriptions
+### 5. Write Chinese explanations a beginner can understand
 
-Each description should answer, in this order:
+Read [references/beginner-writing-guide.md](references/beginner-writing-guide.md) completely before writing visible prose.
 
-1. Which product/module area contains this file?
-2. What concrete step does it perform?
-3. What enters and what leaves?
-4. Which persistent facts, routes, or external systems does it touch?
-5. Why does it use each cross-module dependency?
-6. What behavior do its tests protect?
+For every file, create both a compact row `description` and a structured `purpose` object. Do not make the row description carry the entire drawer.
+
+The compact description should use 1–3 short Chinese sentences and answer what the file does and where it is used. The structured purpose must contain:
+
+- `summary` — why this file exists, in plain Chinese
+- `when` — at which concrete step it is used; for docs/assets/config, who consumes it and when
+- `effect` — what enters or triggers it, and what observable result or changed fact leaves it
+
+Then gather these drawer facts separately:
+
+1. role in each main user capability
+2. main functions, types, and variables, each with a syntactic kind and Chinese explanation
+3. directly touched tables, with Chinese fact name, read/write mode, and purpose
+4. registered routes
+5. dependency purpose
+6. Chinese translation or summary of source design comments
+7. behavior tests
+
+Do not paste long package descriptions into every child file. Explain the narrow action owned by that file. Prefer short sentences and common words; when a technical term is necessary, write `code-name（中文含义）` the first time.
 
 When showing a declaration, include a grounded explanation:
 
@@ -143,17 +158,19 @@ The required visual hierarchy is:
 
 The repository browser is the primary surface. Do not add a large marketing hero, dashboard tiles, oversized title, or decorative empty space above it. Core capabilities remain prominent inside the glossary/overview drawer and as the first major section of every file detail.
 
-The file detail drawer must contain, when evidence exists:
+The file detail drawer must always use this exact order and these Chinese headings:
 
-1. functional purpose
+1. `这个文件主要做什么`
 2. file facts (type, size, lines)
-3. role in each core capability
-4. explained main declarations
-5. translated data/storage names
-6. routes
-7. dependency purpose explanations
-8. useful source design comments
-9. behavior tests
+3. `在 N 个主要功能中的作用`
+4. `主要函数、类型和变量`
+5. `直接涉及的数据表`
+6. `注册的 HTTP 路由`
+7. `为什么要使用其他模块`
+8. `源码设计说明`
+9. `主要测试场景`
+
+Show an explicit short Chinese empty-state sentence when a section has no direct evidence; do not silently remove the section. Never show raw English source comments. Translate or summarize them into `designNotes` first.
 
 Do not add a separate “full path” section. The path is already visible through breadcrumbs and browser context; capability role is more useful.
 

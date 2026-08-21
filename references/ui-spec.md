@@ -14,7 +14,7 @@ Use `../templates/atlas-shell.html` through `../scripts/render_atlas.py`.
 
 The generated document must contain:
 
-- `data-atlas-template="codebase-understanding-atlas/v2"`
+- `data-atlas-template="codebase-understanding-atlas/v3"`
 - `#atlas-topbar`
 - `#repository-head`
 - `#top-directory`
@@ -73,17 +73,20 @@ Do not use capability cards as a large full-width hero above the repository brow
 
 ## File drawer hierarchy
 
-Show user meaning before implementation trivia:
+Show user meaning before implementation trivia. Keep these sections visible and in this order:
 
 1. display name
-2. prominent plain-language purpose
+2. `这个文件主要做什么` — summary, usage moment, and input/effect
 3. compact file facts
-4. one card per core capability
-5. declarations
-6. dependency purposes
-7. storage, routes, tests, and source notes
+4. `在 N 个主要功能中的作用` — one card per capability
+5. `主要函数、类型和变量`
+6. `直接涉及的数据表`
+7. `注册的 HTTP 路由`
+8. `为什么要使用其他模块`
+9. `源码设计说明`
+10. `主要测试场景`
 
-Do not put a redundant full-path block above the capability cards.
+A section without evidence still shows its heading and a short Chinese empty state. Do not hide it. Do not put a redundant full-path block above the capability cards.
 
 ## Rejected layouts
 
